@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>XUANJI · 玄机 — The Eastern Oracle</title>
+<meta name="description" content="A bilingual Eastern astrology reading: four pillars, five elements, and a scroll written for you. 东方命理 · 四柱八字 · 中英双语。" />
+<meta name="theme-color" content="#07060a" />
+<meta property="og:title" content="XUANJI · 玄机 — The Eastern Oracle" />
+<meta property="og:description" content="Four pillars. Eight characters. One life, waiting to be read. A bilingual Eastern astrology reading." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%2307060a'/%3E%3Crect x='10' y='10' width='44' height='44' fill='none' stroke='%23c8a56a' stroke-width='2'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%23c8a56a'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+/*STYLE*/
+</style>
+</head>
+<body data-stage="intro">
+
+<canvas id="sky" aria-hidden="true"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="topbar">
+  <div class="brand" id="brand">
+    <span class="brand-seal">玄</span>
+    <span class="brand-word" id="brandWord">XUANJI <em>玄机</em></span>
+  </div>
+  <div class="top-actions">
+    <button class="music" id="musicToggle" type="button" aria-pressed="false" title="Music">
+      <span class="music-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="music-label" id="musicLabel">Music</span>
+    </button>
+    <div class="lang" id="lang" role="group" aria-label="Language">
+      <button data-lang="en" class="on" type="button">EN</button>
+      <button data-lang="zh" type="button">中文</button>
+    </div>
+  </div>
+</header>
+
+<!-- ============ INTRO ============ -->
+<section class="stage intro on" id="stage-intro" aria-label="Introduction">
+  <div class="intro-inner">
+    <div class="orb orb-lg" id="introOrb" aria-hidden="true">
+      <div class="orb-aura"></div>
+      <div class="orb-ring r1"></div>
+      <div class="orb-ring r2"></div>
+      <div class="orb-ring r3"></div>
+      <div class="orb-core"></div>
+      <div class="orb-trigrams">
+        <span style="--a:0deg">☰</span>
+        <span style="--a:45deg">☱</span>
+        <span style="--a:90deg">☲</span>
+        <span style="--a:135deg">☳</span>
+        <span style="--a:180deg">☴</span>
+        <span style="--a:225deg">☵</span>
+        <span style="--a:270deg">☶</span>
+        <span style="--a:315deg">☷</span>
+      </div>
+      <i class="mote m1"></i><i class="mote m2"></i><i class="mote m3"></i><i class="mote m4"></i><i class="mote m5"></i>
+    </div>
+    <p class="eyebrow" id="introEyebrow"></p>
+    <h1 class="display" id="introTitle"></h1>
+    <p class="intro-sub" id="introSub"></p>
+    <button class="btn btn-solid btn-begin" id="introCta" type="button">
+      <span id="introCtaLabel"></span><i class="arrow">→</i>
+    </button>
+    <p class="intro-meta"><span id="introMeta"></span><span class="dot">·</span><span id="introNote"></span></p>
+  </div>
+  <p class="intro-footer" id="footerNote"></p>
+</section>
+
+<!-- ============ DIALOGUE ============ -->
+<section class="stage" id="stage-dialogue" aria-label="Guided questions">
+  <div class="dialogue">
+    <aside class="guide">
+      <div class="orb orb-md" id="dialogueOrb" aria-hidden="true">
+        <div class="orb-aura"></div>
+        <div class="orb-ring r1"></div>
+        <div class="orb-ring r2"></div>
+        <div class="orb-core"></div>
+        <i class="mote m1"></i><i class="mote m3"></i>
+      </div>
+      <p class="guide-name" id="guideName"></p>
+    </aside>
+    <div class="ask-wrap">
+      <div class="ask-card" id="askCard">
+        <div class="ask-top">
+          <span class="ask-step" id="askStep"></span>
+          <div class="step-dots" id="stepsDots" aria-hidden="true"></div>
+        </div>
+        <p class="ask-q" id="askQ" aria-live="polite"></p>
+        <div class="ask-field" id="askField"></div>
+        <p class="ask-hint" id="askHint" style="display:none"></p>
+        <div class="ask-actions" id="askActions"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CASTING ============ -->
+<section class="stage casting" id="stage-casting" aria-label="Casting the chart">
+  <div class="orb orb-md casting-orb" aria-hidden="true">
+    <div class="orb-aura"></div>
+    <div class="orb-ring r1"></div>
+    <div class="orb-ring r2"></div>
+    <div class="orb-core"></div>
+    <div class="cast-stems">
+      <span style="--a:0deg;--i:0">甲</span>
+      <span style="--a:36deg;--i:1">乙</span>
+      <span style="--a:72deg;--i:2">丙</span>
+      <span style="--a:108deg;--i:3">丁</span>
+      <span style="--a:144deg;--i:4">戊</span>
+      <span style="--a:180deg;--i:5">己</span>
+      <span style="--a:216deg;--i:6">庚</span>
+      <span style="--a:252deg;--i:7">辛</span>
+      <span style="--a:288deg;--i:8">壬</span>
+      <span style="--a:324deg;--i:9">癸</span>
+    </div>
+    <i class="mote m1"></i><i class="mote m3"></i><i class="mote m4"></i>
+  </div>
+  <p class="cast-title" id="castTitle"></p>
+  <div class="cast-lines" id="castLines"></div>
+  <div class="cast-progress"><i id="castBar"></i></div>
+</section>
+
+<!-- ============ READING ============ -->
+<section class="stage reading" id="stage-reading" aria-label="Your reading">
+  <div class="reading-head">
+    <span class="rh-eyebrow" id="rhEyebrow"></span>
+    <span class="rh-count" id="rhCount"></span>
+  </div>
+  <div class="reading-scroll" id="readingScroll">
+    <div id="pages"></div>
+  </div>
+  <aside class="rail" id="railWrap">
+    <span class="rail-label" id="railLabel">Chapters</span>
+    <nav class="rail-dots" id="rail" aria-label="Chapters"></nav>
+  </aside>
+  <footer class="reading-foot">
+    <button class="nav-btn" id="btnPrev" type="button"><i>←</i><span id="btnPrevLabel"></span></button>
+    <div class="foot-progress"><i id="footBar"></i></div>
+    <button class="nav-btn" id="btnNext" type="button"><span id="btnNextLabel"></span><i>→</i></button>
+  </footer>
+</section>
+
+<script>
+/*BAZI*/
+</script>
+<script>window.XUANJI_BGM = "@@BGM@@";</script>
+<script>
+/*MUSIC*/
+</script>
+<script>
+/*CONTENT*/
+</script>
+<script>
+/*APP*/
+</script>
+</body>
+</html>
