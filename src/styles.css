@@ -352,7 +352,7 @@ html[lang="zh"] .music { font-family: var(--zh); letter-spacing: .12em; }
 .orb-trigrams {
   position: absolute;
   inset: 0;
-  animation: spin 150s linear infinite;
+  animation: spin 50s linear infinite;
 }
 
 .orb-trigrams span {
@@ -900,6 +900,83 @@ html[lang="zh"] .crow-v { font-family: var(--zh); font-size: 16px; }
 .crow-edit:hover { color: var(--gold-hi); border-color: var(--gold-dim); }
 
 .confirm-tz { margin-top: 14px; font-size: 9px; letter-spacing: .16em; color: rgba(145, 136, 121, .6); }
+
+/* ---------- date mode switch & manual part inputs ---------- */
+
+.mode-switch {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 6px;
+  margin-bottom: 18px;
+  padding: 4px;
+  border: 1px solid rgba(200, 165, 106, .22);
+  border-radius: 3px;
+  background: rgba(20, 17, 24, .4);
+}
+
+.mode-switch button {
+  background: none;
+  border: 0;
+  padding: 7px 14px;
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: rgba(145, 136, 121, .8);
+  cursor: pointer;
+  transition: color .3s, background .3s;
+}
+
+html[lang="zh"] .mode-switch button { font-family: var(--zh); letter-spacing: .14em; }
+
+.mode-switch button.on {
+  background: rgba(200, 165, 106, .14);
+  color: var(--gold-hi);
+}
+
+#fDate.hidden { display: none; }
+
+.date-parts {
+  display: none;
+  gap: 18px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.date-parts.on { display: flex; }
+
+.date-part {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.date-part.dp4 { width: 128px; }
+.date-part.dp2 { width: 72px; }
+
+.date-part .inp {
+  width: 100%;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: clamp(18px, 2.2vw, 24px);
+  letter-spacing: .08em;
+  padding: 12px 4px 14px;
+}
+
+.date-part-label {
+  position: absolute;
+  right: 0;
+  bottom: -20px;
+  font-size: 9px;
+  letter-spacing: .2em;
+  color: rgba(145, 136, 121, .65);
+  white-space: nowrap;
+}
+
+html[lang="zh"] .date-part-label { font-family: var(--zh); letter-spacing: .3em; }
+
+.date-parts.on { margin-bottom: 26px; }
 
 .ask-actions {
   display: flex;
@@ -2144,6 +2221,17 @@ html[lang="zh"] .health-disclaimer { font-family: var(--zh); letter-spacing: .02
   .summary-seal { display: none; }
   .year-row { grid-template-columns: 52px 92px 40px 1fr; gap: 8px; }
   .luck { flex: 0 0 84px; }
+
+  /* make the confirm button reachable on short viewports */
+  #stage-dialogue {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  #stage-dialogue.on { scroll-behavior: smooth; }
+  .dialogue {
+    align-items: start;
+    min-height: 0;
+  }
 }
 
 @media (max-width: 520px) {
@@ -2157,6 +2245,10 @@ html[lang="zh"] .health-disclaimer { font-family: var(--zh); letter-spacing: .02
   .gender { grid-template-columns: 1fr 1fr; }
   .crow { grid-template-columns: 80px 1fr auto; }
   .inp { font-size: 22px; }
+  .date-parts { gap: 10px; margin-bottom: 24px; }
+  .date-part.dp4 { width: 104px; }
+  .date-part.dp2 { width: 60px; }
+  .date-part .inp { font-size: 20px; padding: 10px 2px 12px; }
 }
 
 /* ---------- reduced motion ---------- */

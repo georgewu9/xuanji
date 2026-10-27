@@ -367,7 +367,7 @@ html[lang="zh"] .music { font-family: var(--zh); letter-spacing: .12em; }
 .orb-trigrams {
   position: absolute;
   inset: 0;
-  animation: spin 150s linear infinite;
+  animation: spin 50s linear infinite;
 }
 
 .orb-trigrams span {
@@ -915,6 +915,83 @@ html[lang="zh"] .crow-v { font-family: var(--zh); font-size: 16px; }
 .crow-edit:hover { color: var(--gold-hi); border-color: var(--gold-dim); }
 
 .confirm-tz { margin-top: 14px; font-size: 9px; letter-spacing: .16em; color: rgba(145, 136, 121, .6); }
+
+/* ---------- date mode switch & manual part inputs ---------- */
+
+.mode-switch {
+  display: inline-flex;
+  align-self: flex-start;
+  gap: 6px;
+  margin-bottom: 18px;
+  padding: 4px;
+  border: 1px solid rgba(200, 165, 106, .22);
+  border-radius: 3px;
+  background: rgba(20, 17, 24, .4);
+}
+
+.mode-switch button {
+  background: none;
+  border: 0;
+  padding: 7px 14px;
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: rgba(145, 136, 121, .8);
+  cursor: pointer;
+  transition: color .3s, background .3s;
+}
+
+html[lang="zh"] .mode-switch button { font-family: var(--zh); letter-spacing: .14em; }
+
+.mode-switch button.on {
+  background: rgba(200, 165, 106, .14);
+  color: var(--gold-hi);
+}
+
+#fDate.hidden { display: none; }
+
+.date-parts {
+  display: none;
+  gap: 18px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.date-parts.on { display: flex; }
+
+.date-part {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.date-part.dp4 { width: 128px; }
+.date-part.dp2 { width: 72px; }
+
+.date-part .inp {
+  width: 100%;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: clamp(18px, 2.2vw, 24px);
+  letter-spacing: .08em;
+  padding: 12px 4px 14px;
+}
+
+.date-part-label {
+  position: absolute;
+  right: 0;
+  bottom: -20px;
+  font-size: 9px;
+  letter-spacing: .2em;
+  color: rgba(145, 136, 121, .65);
+  white-space: nowrap;
+}
+
+html[lang="zh"] .date-part-label { font-family: var(--zh); letter-spacing: .3em; }
+
+.date-parts.on { margin-bottom: 26px; }
 
 .ask-actions {
   display: flex;
@@ -2159,6 +2236,17 @@ html[lang="zh"] .health-disclaimer { font-family: var(--zh); letter-spacing: .02
   .summary-seal { display: none; }
   .year-row { grid-template-columns: 52px 92px 40px 1fr; gap: 8px; }
   .luck { flex: 0 0 84px; }
+
+  /* make the confirm button reachable on short viewports */
+  #stage-dialogue {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  #stage-dialogue.on { scroll-behavior: smooth; }
+  .dialogue {
+    align-items: start;
+    min-height: 0;
+  }
 }
 
 @media (max-width: 520px) {
@@ -2172,6 +2260,10 @@ html[lang="zh"] .health-disclaimer { font-family: var(--zh); letter-spacing: .02
   .gender { grid-template-columns: 1fr 1fr; }
   .crow { grid-template-columns: 80px 1fr auto; }
   .inp { font-size: 22px; }
+  .date-parts { gap: 10px; margin-bottom: 24px; }
+  .date-part.dp4 { width: 104px; }
+  .date-part.dp2 { width: 60px; }
+  .date-part .inp { font-size: 20px; padding: 10px 2px 12px; }
 }
 
 /* ---------- reduced motion ---------- */
@@ -2849,7 +2941,9 @@ html[lang="zh"] .health-disclaimer { font-family: var(--zh); letter-spacing: .02
     },
     date: {
       q: L('Now the day the world first felt your weight. When were you born?', '那么，世界第一次感到你重量的那天——你生于何时？'),
-      hint: L('Date of birth', '出生日期')
+      hint: L('Date of birth', '出生日期'),
+      manual: L('Keyboard', '键盘输入'),
+      picker: L('Calendar', '日历选择')
     },
     time: {
       q: L('And at what hour? The old readers kept time by incense and shadow.', '又是哪一个时辰？古人以香与影计时。'),
@@ -3827,6 +3921,7 @@ html[lang="zh"] .health-disclaimer { font-family: var(--zh); letter-spacing: .02
     step: 0,
     page: 0,
     chart: null,
+    dateMode: 'picker',
     form: { name: '', date: '', time: '', gender: '', place: '', tz: browserTz }
   };
 
@@ -4094,8 +4189,32 @@ html[lang="zh"] .health-disclaimer { font-family: var(--zh); letter-spacing: .02
       </div>`;
     }
     if (key === 'date') {
+      const [y, m, d] = f.date ? f.date.split('-') : [];
+      const partsHTML = () => {
+        const now = new Date();
+        const maxDay = (mm, yy) => new Date(yy, mm, 0).getDate();
+        const dayCap = (m ? maxDay(+m, +y || now.getFullYear()) : 31);
+        const parts = [
+          { id: 'fYear', label: state.lang === 'zh' ? '年' : 'YYYY', val: y || '', len: 4, min: 1900, max: now.getFullYear(), next: 'fMonth' },
+          { id: 'fMonth', label: state.lang === 'zh' ? '月' : 'MM', val: m || '', len: 2, min: 1, max: 12, next: 'fDay' },
+          { id: 'fDay', label: state.lang === 'zh' ? '日' : 'DD', val: d || '', len: 2, min: 1, max: dayCap }
+        ];
+        return `<div class="date-parts${state.dateMode === 'manual' ? ' on' : ''}" id="fDateParts">
+          ${parts.map(p => `<div class="date-part dp${p.len}">
+            <input id="${p.id}" class="inp" inputmode="numeric" autocomplete="off" data-part="${p.id}"
+              data-len="${p.len}" data-min="${p.min}" data-max="${p.max}" data-next="${p.next || ''}"
+              value="${esc(p.val)}" placeholder="${'0'.repeat(p.len)}" maxlength="${p.len}" />
+            <span class="date-part-label">${esc(p.label)}</span>
+          </div>`).join('')}
+        </div>`;
+      };
       return `<div class="field">
+        <div class="mode-switch" id="fDateSwitch" role="group" aria-label="Date input mode">
+          <button type="button" data-mode="picker" class="${state.dateMode === 'picker' ? 'on' : ''}">${esc(t(UI.date.picker))}</button>
+          <button type="button" data-mode="manual" class="${state.dateMode === 'manual' ? 'on' : ''}">${esc(t(UI.date.manual))}</button>
+        </div>
         <input id="fDate" class="inp inp-big" type="date" min="1900-01-01" max="${todayStr()}" value="${esc(f.date)}" />
+        ${partsHTML()}
         <p class="field-hint">${esc(t(UI.date.hint))}</p>
       </div>`;
     }
@@ -4224,9 +4343,54 @@ html[lang="zh"] .health-disclaimer { font-family: var(--zh); letter-spacing: .02
       inp.addEventListener('input', () => { state.form.name = inp.value; });
     }
     if (key === 'date') {
-      const inp = $('#fDate');
-      inp.addEventListener('input', () => { state.form.date = inp.value; update(); });
-      inp.addEventListener('change', () => { state.form.date = inp.value; update(); });
+      const picker = $('#fDate');
+      picker.addEventListener('input', () => {
+        state.form.date = picker.value;
+        syncManualParts();
+        update();
+      });
+      picker.addEventListener('change', () => {
+        state.form.date = picker.value;
+        syncManualParts();
+        update();
+      });
+      const dayInp = $('#fDay');
+      const syncManualParts = () => {
+        const [y, m, d] = (state.form.date || '').split('-');
+        $('#fYear').value = y || '';
+        $('#fMonth').value = m || '';
+        $('#fDay').value = d || '';
+        if (y && m) dayInp.dataset.max = new Date(+y, +m, 0).getDate();
+      };
+      const wire = id => {
+        const inp = $(id);
+        inp.addEventListener('input', () => {
+          let v = inp.value.replace(/\D/g, '').slice(0, +inp.dataset.len);
+          inp.value = v;
+          const yv = $('#fYear').value, mv = $('#fMonth').value;
+          if ((id === '#fYear' && v.length === 4) || (id === '#fMonth' && yv.length === 4)) {
+            dayInp.dataset.max = new Date(+yv, +mv || 1, 0).getDate() || 31;
+          }
+          const y = +yv, m = +mv, d = +$('#fDay').value;
+          state.form.date = (yv.length === 4 && y >= 1900 && y <= 2026 && m >= 1 && m <= 12 && d >= 1 && d <= 31)
+            ? yv + '-' + pad(m) + '-' + pad(d) : '';
+          picker.value = state.form.date;
+          update();
+          const nx = inp.dataset.next && $(inp.dataset.next);
+          if (inp.value.length >= +inp.dataset.len && nx) nx.focus();
+        });
+      };
+      ['#fYear', '#fMonth', '#fDay'].forEach(wire);
+      $$('#fDateSwitch button').forEach(b => b.addEventListener('click', () => {
+        state.dateMode = b.dataset.mode;
+        $$('#fDateSwitch button').forEach(x => x.classList.toggle('on', x === b));
+        picker.classList.toggle('hidden', state.dateMode === 'manual');
+        $('#fDateParts').classList.toggle('on', state.dateMode === 'manual');
+        if (state.dateMode === 'manual') {
+          syncManualParts();
+          $('#fYear').focus({ preventScroll: true });
+        }
+      }));
     }
     if (key === 'time') {
       const inp = $('#fTime');
@@ -4785,6 +4949,7 @@ html[lang="zh"] .health-disclaimer { font-family: var(--zh); letter-spacing: .02
     state.chart = null;
     state.page = 0;
     state.step = 0;
+    state.dateMode = 'picker';
     state.form = { name: '', date: '', time: '', gender: '', place: '', tz: browserTz };
     showStage('intro');
   }

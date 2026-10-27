@@ -34,7 +34,9 @@
     },
     date: {
       q: L('Now the day the world first felt your weight. When were you born?', '那么，世界第一次感到你重量的那天——你生于何时？'),
-      hint: L('Date of birth', '出生日期')
+      hint: L('Date of birth', '出生日期'),
+      manual: L('Keyboard', '键盘输入'),
+      picker: L('Calendar', '日历选择')
     },
     time: {
       q: L('And at what hour? The old readers kept time by incense and shadow.', '又是哪一个时辰？古人以香与影计时。'),

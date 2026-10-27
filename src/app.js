@@ -37,6 +37,7 @@
     step: 0,
     page: 0,
     chart: null,
+    dateMode: 'picker',
     form: { name: '', date: '', time: '', gender: '', place: '', tz: browserTz }
   };
 
@@ -304,8 +305,32 @@
       </div>`;
     }
     if (key === 'date') {
+      const [y, m, d] = f.date ? f.date.split('-') : [];
+      const partsHTML = () => {
+        const now = new Date();
+        const maxDay = (mm, yy) => new Date(yy, mm, 0).getDate();
+        const dayCap = (m ? maxDay(+m, +y || now.getFullYear()) : 31);
+        const parts = [
+          { id: 'fYear', label: state.lang === 'zh' ? '年' : 'YYYY', val: y || '', len: 4, min: 1900, max: now.getFullYear(), next: 'fMonth' },
+          { id: 'fMonth', label: state.lang === 'zh' ? '月' : 'MM', val: m || '', len: 2, min: 1, max: 12, next: 'fDay' },
+          { id: 'fDay', label: state.lang === 'zh' ? '日' : 'DD', val: d || '', len: 2, min: 1, max: dayCap }
+        ];
+        return `<div class="date-parts${state.dateMode === 'manual' ? ' on' : ''}" id="fDateParts">
+          ${parts.map(p => `<div class="date-part dp${p.len}">
+            <input id="${p.id}" class="inp" inputmode="numeric" autocomplete="off" data-part="${p.id}"
+              data-len="${p.len}" data-min="${p.min}" data-max="${p.max}" data-next="${p.next || ''}"
+              value="${esc(p.val)}" placeholder="${'0'.repeat(p.len)}" maxlength="${p.len}" />
+            <span class="date-part-label">${esc(p.label)}</span>
+          </div>`).join('')}
+        </div>`;
+      };
       return `<div class="field">
+        <div class="mode-switch" id="fDateSwitch" role="group" aria-label="Date input mode">
+          <button type="button" data-mode="picker" class="${state.dateMode === 'picker' ? 'on' : ''}">${esc(t(UI.date.picker))}</button>
+          <button type="button" data-mode="manual" class="${state.dateMode === 'manual' ? 'on' : ''}">${esc(t(UI.date.manual))}</button>
+        </div>
         <input id="fDate" class="inp inp-big" type="date" min="1900-01-01" max="${todayStr()}" value="${esc(f.date)}" />
+        ${partsHTML()}
         <p class="field-hint">${esc(t(UI.date.hint))}</p>
       </div>`;
     }
@@ -434,9 +459,54 @@
       inp.addEventListener('input', () => { state.form.name = inp.value; });
     }
     if (key === 'date') {
-      const inp = $('#fDate');
-      inp.addEventListener('input', () => { state.form.date = inp.value; update(); });
-      inp.addEventListener('change', () => { state.form.date = inp.value; update(); });
+      const picker = $('#fDate');
+      picker.addEventListener('input', () => {
+        state.form.date = picker.value;
+        syncManualParts();
+        update();
+      });
+      picker.addEventListener('change', () => {
+        state.form.date = picker.value;
+        syncManualParts();
+        update();
+      });
+      const dayInp = $('#fDay');
+      const syncManualParts = () => {
+        const [y, m, d] = (state.form.date || '').split('-');
+        $('#fYear').value = y || '';
+        $('#fMonth').value = m || '';
+        $('#fDay').value = d || '';
+        if (y && m) dayInp.dataset.max = new Date(+y, +m, 0).getDate();
+      };
+      const wire = id => {
+        const inp = $(id);
+        inp.addEventListener('input', () => {
+          let v = inp.value.replace(/\D/g, '').slice(0, +inp.dataset.len);
+          inp.value = v;
+          const yv = $('#fYear').value, mv = $('#fMonth').value;
+          if ((id === '#fYear' && v.length === 4) || (id === '#fMonth' && yv.length === 4)) {
+            dayInp.dataset.max = new Date(+yv, +mv || 1, 0).getDate() || 31;
+          }
+          const y = +yv, m = +mv, d = +$('#fDay').value;
+          state.form.date = (yv.length === 4 && y >= 1900 && y <= 2026 && m >= 1 && m <= 12 && d >= 1 && d <= 31)
+            ? yv + '-' + pad(m) + '-' + pad(d) : '';
+          picker.value = state.form.date;
+          update();
+          const nx = inp.dataset.next && $(inp.dataset.next);
+          if (inp.value.length >= +inp.dataset.len && nx) nx.focus();
+        });
+      };
+      ['#fYear', '#fMonth', '#fDay'].forEach(wire);
+      $$('#fDateSwitch button').forEach(b => b.addEventListener('click', () => {
+        state.dateMode = b.dataset.mode;
+        $$('#fDateSwitch button').forEach(x => x.classList.toggle('on', x === b));
+        picker.classList.toggle('hidden', state.dateMode === 'manual');
+        $('#fDateParts').classList.toggle('on', state.dateMode === 'manual');
+        if (state.dateMode === 'manual') {
+          syncManualParts();
+          $('#fYear').focus({ preventScroll: true });
+        }
+      }));
     }
     if (key === 'time') {
       const inp = $('#fTime');
@@ -995,6 +1065,7 @@
     state.chart = null;
     state.page = 0;
     state.step = 0;
+    state.dateMode = 'picker';
     state.form = { name: '', date: '', time: '', gender: '', place: '', tz: browserTz };
     showStage('intro');
   }
